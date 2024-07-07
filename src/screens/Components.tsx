@@ -6,6 +6,7 @@ import { MyAppText } from "@components/MyAppText";
 import { Select } from "@components/Select";
 import { useState } from "react";
 import { Input } from "@components/Input";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export const Components = () => {
   const [selected, setSelected] = useState<boolean>(false);
@@ -30,12 +31,11 @@ export const Components = () => {
   );
 };
 
-const Container = styled.View`
+const Container = styled(SafeAreaView)`
   flex: 1;
-  /* justify-content: center; */
   align-items: center;
 
-  padding: 72px 32px;
+  padding: 32px;
   gap: 24px;
 `;
 
