@@ -29,7 +29,7 @@ export const Home = () => {
   const { v4 } = uuid;
   const navigation = useNavigation();
 
-  const [type, setType] = useState<"POSITIVE" | "NEGATIVE">("NEGATIVE");
+  const [type, setType] = useState<"POSITIVE" | "NEGATIVE">("POSITIVE");
   const [meals, setMealsByDate] = useState<{ [key: string]: Meal[] }>({
     "2024-07-07T00:00:00": [
       {
@@ -60,7 +60,6 @@ export const Home = () => {
   });
 
   useEffect(() => {
-    // sort meals by time in descending order
     const sortedMealsByDate = Object.fromEntries(
       Object.entries(meals).map(([date, meals]) => [
         date,
