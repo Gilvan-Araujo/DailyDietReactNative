@@ -10,7 +10,7 @@ type StyleProps = {
 type ButtonProps = TouchableOpacityProps &
   StyleProps & {
     label: string;
-    Icon: React.ComponentType<IconProps>;
+    Icon?: React.ComponentType<IconProps>;
   };
 
 export const Button = ({ variant = "DEFAULT", Icon, ...rest }: ButtonProps) => {
@@ -18,12 +18,14 @@ export const Button = ({ variant = "DEFAULT", Icon, ...rest }: ButtonProps) => {
 
   return (
     <Container variant={variant} {...rest}>
-      <Icon
-        color={
-          variant === "DEFAULT" ? theme.COLORS.WHITE : theme.COLORS.GRAY_100
-        }
-        size={18}
-      />
+      {Icon && (
+        <Icon
+          color={
+            variant === "DEFAULT" ? theme.COLORS.WHITE : theme.COLORS.GRAY_100
+          }
+          size={18}
+        />
+      )}
       <Title variant={variant} fontSize={14}>
         {rest.label}
       </Title>

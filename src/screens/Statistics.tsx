@@ -8,7 +8,7 @@ type CardTypeProps = {
   type: "POSITIVE" | "NEGATIVE" | "NEUTRAL";
 };
 
-export const StatusScreen = () => {
+export const Statistics = () => {
   const navigation = useNavigation();
   const { COLORS } = useTheme();
 

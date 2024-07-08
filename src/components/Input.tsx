@@ -2,15 +2,19 @@ import { TextInput, TextInputProps } from "react-native";
 import styled, { css, useTheme } from "styled-components/native";
 import { MyAppText } from "./MyAppText";
 import { useState } from "react";
+import TextInputMask from "react-native-text-input-mask";
 
 type Props = TextInputProps & {
   inputRef?: React.RefObject<TextInput>;
   label?: string;
+  mask?: string;
 };
 
 export function Input({ inputRef, label, ...rest }: Props) {
   const { COLORS } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
+
+  const test = new Object(rest.style);
 
   const onFocus = () => setIsFocused(true);
   const onBlur = () => {
@@ -20,11 +24,13 @@ export function Input({ inputRef, label, ...rest }: Props) {
   return (
     <Container>
       {label && <Label>{label}</Label>}
+
       <InputWrapper
         {...rest}
         ref={inputRef}
         placeholderTextColor={COLORS.GRAY_500}
         style={{
+          ...test,
           borderColor:
             isFocused || rest.value ? COLORS.GRAY_100 : COLORS.GRAY_500,
         }}
@@ -41,15 +47,10 @@ export function Input({ inputRef, label, ...rest }: Props) {
   );
 }
 
-const Container = styled.View`
-  width: 100%;
-`;
+const Container = styled.View``;
 
 const InputWrapper = styled(TextInput)<Props>`
-  flex: 1;
-
   min-height: 56px;
-  max-height: 56px;
 
   ${({ theme, value, inputRef }) => css`
     background-color: ${theme.COLORS.WHITE};
@@ -61,10 +62,11 @@ const InputWrapper = styled(TextInput)<Props>`
 
   border-radius: 6px;
   border-width: 1px;
-  padding: 16px;
+  padding: 14px;
+  width: 100%;
 `;
 
-const Label = styled(MyAppText)`
+const Label = styled(MyAppText).attrs({ fontStyle: "bold", fontSize: 14 })`
   font-family: ${({ theme }) => theme.FONT_FAMILY.BOLD};
   color: ${({ theme }) => theme.COLORS.GRAY_200};
   margin-bottom: 4px;
