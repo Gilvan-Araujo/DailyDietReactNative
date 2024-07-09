@@ -59,6 +59,10 @@ export const Home = () => {
     ],
   });
 
+  const handleNewMeal = () => {
+    navigation.navigate("newMeal");
+  };
+
   useEffect(() => {
     const sortedMealsByDate = Object.fromEntries(
       Object.entries(meals).map(([date, meals]) => [
@@ -102,7 +106,7 @@ export const Home = () => {
         <NewMeal>
           <MyAppText>Refeições</MyAppText>
 
-          <Button Icon={Plus} label="Nova refeição" />
+          <Button Icon={Plus} label="Nova refeição" onPress={handleNewMeal} />
         </NewMeal>
 
         {Object.keys(meals).map((date) => {

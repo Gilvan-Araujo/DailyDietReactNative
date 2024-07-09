@@ -6,7 +6,7 @@ import { ArrowLeft } from "phosphor-react-native";
 import { Alert, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styled from "styled-components/native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 
 type MealInfo = {
@@ -52,10 +52,26 @@ export const NewMeal = () => {
     insideDiet: undefined,
   });
 
+  const handleGoHome = () => navigation.navigate("home");
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener("focus", () => {
+      setMealInfo({
+        name: "",
+        description: "",
+        date: "",
+        time: "",
+        insideDiet: undefined,
+      });
+    });
+
+    return unsubscribe;
+  }, []);
+
   return (
     <Container>
       <Header>
-        <BackButton onPress={() => navigation.goBack()}>
+        <BackButton onPress={handleGoHome}>
           <ArrowLeft size={24} color="black" />
         </BackButton>
         <MyAppText fontSize={18} fontStyle="bold">
@@ -197,7 +213,10 @@ export const NewMeal = () => {
             if (!validateDate(mealInfo.date))
               return Alert.alert("Data inválida", "A data está inválida");
 
-            console.log("submit", mealInfo);
+            if (mealInfo.insideDiet !== undefined)
+              navigation.navigate("newMealInsideOrOutsideDiet", {
+                inDiet: mealInfo.insideDiet,
+              });
           }}
         />
       </Content>
