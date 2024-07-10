@@ -1,5 +1,5 @@
 import { MyAppText } from "@components/MyAppText";
-import { Image, View } from "react-native";
+import { Image, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styled, { useTheme } from "styled-components/native";
 import uuid from "react-native-uuid";
@@ -7,11 +7,14 @@ import uuid from "react-native-uuid";
 import logo from "@assets/logo.png";
 import profile from "@assets/profile.png";
 import { ArrowDownRight, ArrowUpRight, Plus } from "phosphor-react-native";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@components/Button";
 import { format } from "date-fns";
 import { RoundCircle } from "@components/icons/RoundCircle";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { getMeals } from "@storage/meal/getMeals";
+import { MealInfo } from "./NewMeal";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 type CardProps = {
   type: "POSITIVE" | "NEGATIVE";
@@ -30,54 +33,67 @@ export const Home = () => {
   const navigation = useNavigation();
 
   const [type, setType] = useState<"POSITIVE" | "NEGATIVE">("POSITIVE");
-  const [meals, setMealsByDate] = useState<{ [key: string]: Meal[] }>({
-    "2024-07-07T00:00:00": [
-      {
-        id: v4().toString(),
-        name: "Breakfast Breakfast  Breakfast Breakfast Breakfast Breakfast",
-        time: new Date("2022-01-01T08:00:00"),
-        inDiet: true,
-      },
-      {
-        id: v4().toString(),
-        name: "Lunch",
-        time: new Date("2022-01-01T12:00:00"),
-        inDiet: true,
-      },
-      {
-        id: v4().toString(),
-        name: "Brunch",
-        time: new Date("2022-01-01T15:00:00"),
-        inDiet: false,
-      },
-      {
-        id: v4().toString(),
-        name: "Dinner",
-        time: new Date("2022-01-01T18:00:00"),
-        inDiet: false,
-      },
-    ],
-  });
+  const [meals, setMealsByDate] = useState<{ [key: string]: Meal[] }>({});
 
   const handleNewMeal = () => {
     navigation.navigate("newMeal");
   };
 
-  useEffect(() => {
-    const sortedMealsByDate = Object.fromEntries(
-      Object.entries(meals).map(([date, meals]) => [
+  const clearStorage = async () => {
+    await AsyncStorage.clear();
+  };
+
+  const getMealsFromStorage = async () => {
+    const meals: MealInfo[] = await getMeals();
+    const mealsByDate: { [key: string]: Meal[] } = {};
+
+    meals.forEach((meal: MealInfo) => {
+      const date = meal.date;
+      const time = new Date(`${date}T${meal.time}:00`);
+
+      if (!mealsByDate[date]) {
+        mealsByDate[date] = [];
+      }
+
+      mealsByDate[date].push({
+        id: v4().toString(),
+        name: meal.name,
+        time,
+        inDiet: meal.insideDiet ?? true,
+      });
+    });
+
+    const sortedMealsByTime = Object.fromEntries(
+      Object.entries(mealsByDate).map(([date, meals]) => [
         date,
         meals.sort((a, b) => b.time.getTime() - a.time.getTime()),
       ])
     );
 
+    const sortedMealsByDate = Object.fromEntries(
+      Object.entries(sortedMealsByTime).sort(
+        ([dateA], [dateB]) =>
+          new Date(dateB).getTime() - new Date(dateA).getTime()
+      )
+    );
+
     setMealsByDate(sortedMealsByDate);
-  }, []);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      getMealsFromStorage();
+      clearStorage();
+    }, [])
+  );
 
   return (
     <Container>
       <Header>
         <Image source={logo} />
+        <TouchableOpacity onPress={clearStorage}>
+          <MyAppText>Clear Storage</MyAppText>
+        </TouchableOpacity>
         <Image source={profile} />
       </Header>
 
@@ -111,11 +127,12 @@ export const Home = () => {
 
         {Object.keys(meals).map((date) => {
           const mealsByDate = meals[date];
+          const formattedDate = new Date(date + "T00:00");
 
           return (
             <DailyMealList key={date.toString()}>
               <MyAppText fontSize={18} fontStyle="bold">
-                {format(date, "dd.MM.yyyy")}
+                {format(formattedDate, "dd.MM.yyyy")}
               </MyAppText>
 
               {mealsByDate.map((meal) => (
@@ -159,6 +176,7 @@ const Header = styled.View`
   margin-bottom: 24px;
 
   justify-content: space-between;
+  align-items: center;
   flex-direction: row;
 `;
 

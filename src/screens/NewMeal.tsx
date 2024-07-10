@@ -6,10 +6,11 @@ import { ArrowLeft } from "phosphor-react-native";
 import { Alert, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styled from "styled-components/native";
-import { useEffect, useState } from "react";
-import { useNavigation } from "@react-navigation/native";
+import { useCallback, useEffect, useState } from "react";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { createMeal } from "@storage/meal/createMeal";
 
-type MealInfo = {
+export type MealInfo = {
   name: string;
   description: string;
   date: string;
@@ -41,32 +42,92 @@ const validateDate = (date: string) => {
   return true;
 };
 
+const emptyMealInfo: MealInfo = {
+  name: "",
+  description: "",
+  date: "",
+  time: "",
+  insideDiet: undefined,
+};
+
 export const NewMeal = () => {
   const navigation = useNavigation();
 
-  const [mealInfo, setMealInfo] = useState<MealInfo>({
-    name: "",
-    description: "",
-    date: "",
-    time: "",
-    insideDiet: undefined,
-  });
+  const [mealInfo, setMealInfo] = useState<MealInfo>(emptyMealInfo);
 
   const handleGoHome = () => navigation.navigate("home");
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", () => {
-      setMealInfo({
-        name: "",
-        description: "",
-        date: "",
-        time: "",
-        insideDiet: undefined,
-      });
+  const handleLogMeal = async () => {
+    let error = false;
+    let errorMessage = "Os seguintes campos não foram preenchidos: ";
+
+    Object.keys(mealInfo).forEach((key) => {
+      if (mealInfo[key] === "" || typeof mealInfo[key] === "undefined") {
+        error = true;
+        errorMessage += `${
+          MealInfoErrors[key as keyof typeof MealInfoErrors]
+        }, `;
+      }
     });
 
-    return unsubscribe;
-  }, []);
+    if (error)
+      return Alert.alert(
+        "Campos inválidos",
+        errorMessage.slice(0, errorMessage.length - 2)
+      );
+
+    if (mealInfo.date.length < 10)
+      return Alert.alert("Data inválida", "A data deve conter 10 caracteres");
+
+    if (mealInfo.time.length < 5)
+      return Alert.alert("Hora inválida", "A hora está incompleta");
+
+    if (!validateTime(mealInfo.time))
+      return Alert.alert("Hora inválida", "A hora está inválida");
+
+    if (!validateDate(mealInfo.date))
+      return Alert.alert("Data inválida", "A data está inválida");
+
+    if (mealInfo.insideDiet !== undefined) {
+      const [day, month, year] = mealInfo.date.split("/");
+      mealInfo.date = `${year}-${month}-${day}`;
+      await createMeal(mealInfo);
+
+      navigation.navigate("newMealInsideOrOutsideDiet", {
+        inDiet: mealInfo.insideDiet,
+      });
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      setMealInfo(emptyMealInfo);
+
+      Alert.alert("Refeição agora?", "Você está comendo agora?", [
+        {
+          text: "Sim",
+          onPress: () => {
+            const now = new Date();
+            const day = now.getDate().toString().padStart(2, "0");
+            const month = (now.getMonth() + 1).toString().padStart(2, "0");
+            const year = now.getFullYear().toString();
+            const hour = now.getHours().toString().padStart(2, "0");
+            const minute = now.getMinutes().toString().padStart(2, "0");
+
+            setMealInfo((prevState) => ({
+              ...prevState,
+              date: `${day}/${month}/${year}`,
+              time: `${hour}:${minute}`,
+            }));
+          },
+        },
+        {
+          text: "Não",
+          onPress: () => {},
+        },
+      ]);
+    }, [])
+  );
 
   return (
     <Container>
@@ -173,52 +234,7 @@ export const NewMeal = () => {
           />
         </InsideDietContainer>
 
-        <Button
-          label="Cadastrar refeição"
-          onPress={() => {
-            let error = false;
-            let errorMessage = "Os seguintes campos não foram preenchidos: ";
-
-            Object.keys(mealInfo).forEach((key) => {
-              console.log(typeof mealInfo[key], key, mealInfo[key]);
-              if (
-                mealInfo[key] === "" ||
-                typeof mealInfo[key] === "undefined"
-              ) {
-                error = true;
-                errorMessage += `${
-                  MealInfoErrors[key as keyof typeof MealInfoErrors]
-                }, `;
-              }
-            });
-
-            if (error)
-              return Alert.alert(
-                "Campos inválidos",
-                errorMessage.slice(0, errorMessage.length - 2)
-              );
-
-            if (mealInfo.date.length < 10)
-              return Alert.alert(
-                "Data inválida",
-                "A data deve conter 10 caracteres"
-              );
-
-            if (mealInfo.time.length < 5)
-              return Alert.alert("Hora inválida", "A hora está incompleta");
-
-            if (!validateTime(mealInfo.time))
-              return Alert.alert("Hora inválida", "A hora está inválida");
-
-            if (!validateDate(mealInfo.date))
-              return Alert.alert("Data inválida", "A data está inválida");
-
-            if (mealInfo.insideDiet !== undefined)
-              navigation.navigate("newMealInsideOrOutsideDiet", {
-                inDiet: mealInfo.insideDiet,
-              });
-          }}
-        />
+        <Button label="Cadastrar refeição" onPress={handleLogMeal} />
       </Content>
     </Container>
   );

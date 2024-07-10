@@ -5,7 +5,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import styled from "styled-components/native";
 import inDietImage from "@assets/in-diet.png";
 import outsideDietImage from "@assets/outside-diet.png";
-import { Image } from "react-native";
 
 type RouteParams = ReactNavigation.RootParamList["newMealInsideOrOutsideDiet"];
 
