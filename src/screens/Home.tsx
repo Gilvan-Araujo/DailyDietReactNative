@@ -12,9 +12,10 @@ import { Button } from "@components/Button";
 import { format } from "date-fns";
 import { RoundCircle } from "@components/icons/RoundCircle";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { getMeals } from "@storage/meal/getMeals";
+import { getMeals } from "@storage/meals/getMeals";
 import { MealInfo } from "./NewMeal";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getPercentage } from "@storage/status/getPercentage";
 
 type CardProps = {
   type: "POSITIVE" | "NEGATIVE";
@@ -32,7 +33,13 @@ export const Home = () => {
   const { v4 } = uuid;
   const navigation = useNavigation();
 
-  const [type, setType] = useState<"POSITIVE" | "NEGATIVE">("POSITIVE");
+  const [status, setStatus] = useState<{
+    type: "POSITIVE" | "NEGATIVE";
+    percentage: string;
+  }>({
+    type: "POSITIVE",
+    percentage: "0",
+  });
   const [meals, setMealsByDate] = useState<{ [key: string]: Meal[] }>({});
 
   const handleNewMeal = () => {
@@ -77,13 +84,20 @@ export const Home = () => {
       )
     );
 
+    console.log(sortedMealsByDate);
+
+    const percentage = await getPercentage(meals);
+    setStatus({
+      type: percentage > 70 ? "POSITIVE" : "NEGATIVE",
+      percentage: percentage.toFixed(2),
+    });
+
     setMealsByDate(sortedMealsByDate);
   };
 
   useFocusEffect(
     useCallback(() => {
       getMealsFromStorage();
-      clearStorage();
     }, [])
   );
 
@@ -97,8 +111,8 @@ export const Home = () => {
         <Image source={profile} />
       </Header>
 
-      <Card type={type} onPress={() => navigation.navigate("stats")}>
-        {type === "POSITIVE" ? (
+      <Card type={status.type} onPress={() => navigation.navigate("stats")}>
+        {status.type === "POSITIVE" ? (
           <ArrowUpRight
             size={24}
             color={COLORS.GREEN_DARK}
@@ -113,7 +127,7 @@ export const Home = () => {
         )}
 
         <MyAppText fontSize={32} fontStyle="bold">
-          90.86%
+          {status.percentage}%
         </MyAppText>
         <MyAppText fontSize={14}>das refeições dentro da dieta</MyAppText>
       </Card>

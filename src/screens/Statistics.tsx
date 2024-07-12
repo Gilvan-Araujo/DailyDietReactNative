@@ -1,6 +1,11 @@
 import { MyAppText } from "@components/MyAppText";
-import { useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import {
+  getStatisticsScreenData,
+  StatisticsScreenData,
+} from "@storage/status/getStatisticsScreenData";
 import { ArrowLeft } from "phosphor-react-native";
+import { useCallback, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styled, { useTheme } from "styled-components/native";
 
@@ -11,6 +16,20 @@ type CardTypeProps = {
 export const Statistics = () => {
   const navigation = useNavigation();
   const { COLORS } = useTheme();
+
+  const [data, setData] = useState<StatisticsScreenData>();
+
+  const getStatisticsData = async () => {
+    const data = await getStatisticsScreenData();
+
+    setData(data);
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      getStatisticsData();
+    }, [])
+  );
 
   const renderTitleAndContent = (title: string, content: string) => (
     <>
@@ -25,7 +44,7 @@ export const Statistics = () => {
     <Container>
       <Header>
         <MyAppText fontSize={32} fontStyle="bold">
-          90,86%
+          {data?.percentage.toFixed(2) || "0"}%
         </MyAppText>
         <MyAppText>das refeições dentro da dieta</MyAppText>
       </Header>
@@ -41,22 +60,31 @@ export const Statistics = () => {
 
         <Card type="NEUTRAL">
           {renderTitleAndContent(
-            "22",
+            data?.bestMealsInsideDietStreak.toString() || "0",
             "melhor sequência de pratos dentro da dieta"
           )}
         </Card>
 
         <Card type="NEUTRAL">
-          {renderTitleAndContent("109", "refeições registradas")}
+          {renderTitleAndContent(
+            data?.totalMeals.toString() || "0",
+            "refeições registradas"
+          )}
         </Card>
 
         <PositiveAndNegativeCardsContainer>
           <Card type="POSITIVE">
-            {renderTitleAndContent("99", "refeições dentro da dieta")}
+            {renderTitleAndContent(
+              data?.mealsInsideDiet.toString() || "0",
+              "refeições dentro da dieta"
+            )}
           </Card>
 
           <Card type="NEGATIVE">
-            {renderTitleAndContent("10", "refeições fora da dieta")}
+            {renderTitleAndContent(
+              data?.mealsOutsideDiet.toString() || "0",
+              "refeições fora da dieta"
+            )}
           </Card>
         </PositiveAndNegativeCardsContainer>
       </MainContent>

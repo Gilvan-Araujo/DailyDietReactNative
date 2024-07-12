@@ -6,9 +6,9 @@ import { ArrowLeft } from "phosphor-react-native";
 import { Alert, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styled from "styled-components/native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { createMeal } from "@storage/meal/createMeal";
+import { createMeal } from "@storage/meals/createMeal";
 
 export type MealInfo = {
   name: string;
