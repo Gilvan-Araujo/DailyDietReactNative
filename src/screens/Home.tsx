@@ -2,7 +2,6 @@ import { MyAppText } from "@components/MyAppText";
 import { Image, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styled, { useTheme } from "styled-components/native";
-import uuid from "react-native-uuid";
 
 import logo from "@assets/logo.png";
 import profile from "@assets/profile.png";
@@ -30,7 +29,6 @@ type Meal = {
 
 export const Home = () => {
   const { COLORS } = useTheme();
-  const { v4 } = uuid;
   const navigation = useNavigation();
 
   const [status, setStatus] = useState<{
@@ -44,6 +42,10 @@ export const Home = () => {
 
   const handleNewMeal = () => {
     navigation.navigate("newMeal");
+  };
+
+  const handleClickOnMeal = (mealId: string) => {
+    navigation.navigate("meal", { mealId });
   };
 
   const clearStorage = async () => {
@@ -63,7 +65,7 @@ export const Home = () => {
       }
 
       mealsByDate[date].push({
-        id: v4().toString(),
+        id: meal.id ?? "",
         name: meal.name,
         time,
         inDiet: meal.insideDiet ?? true,
@@ -150,7 +152,7 @@ export const Home = () => {
               </MyAppText>
 
               {mealsByDate.map((meal) => (
-                <Meal key={meal.id}>
+                <Meal key={meal.id} onPress={() => handleClickOnMeal(meal.id)}>
                   <MyAppText>{format(meal.time, "HH:mm")}</MyAppText>
 
                   <Divider />
@@ -221,7 +223,7 @@ const DailyMealList = styled.View`
   gap: 8px;
 `;
 
-const Meal = styled.View`
+const Meal = styled.TouchableOpacity`
   align-items: center;
   border-width: 1px;
   border-radius: 6px;

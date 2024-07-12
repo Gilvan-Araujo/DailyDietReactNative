@@ -9,8 +9,10 @@ import styled from "styled-components/native";
 import { useCallback, useState } from "react";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { createMeal } from "@storage/meals/createMeal";
+import uuid from "react-native-uuid";
 
 export type MealInfo = {
+  id: string;
   name: string;
   description: string;
   date: string;
@@ -43,6 +45,7 @@ const validateDate = (date: string) => {
 };
 
 const emptyMealInfo: MealInfo = {
+  id: "",
   name: "",
   description: "",
   date: "",
@@ -52,6 +55,7 @@ const emptyMealInfo: MealInfo = {
 
 export const NewMeal = () => {
   const navigation = useNavigation();
+  const { v4 } = uuid;
 
   const [mealInfo, setMealInfo] = useState<MealInfo>(emptyMealInfo);
 
@@ -62,6 +66,8 @@ export const NewMeal = () => {
     let errorMessage = "Os seguintes campos não foram preenchidos: ";
 
     Object.keys(mealInfo).forEach((key) => {
+      if (key === "id") return;
+
       if (mealInfo[key] === "" || typeof mealInfo[key] === "undefined") {
         error = true;
         errorMessage += `${
@@ -91,7 +97,10 @@ export const NewMeal = () => {
     if (mealInfo.insideDiet !== undefined) {
       const [day, month, year] = mealInfo.date.split("/");
       mealInfo.date = `${year}-${month}-${day}`;
-      await createMeal(mealInfo);
+      await createMeal({
+        ...mealInfo,
+        id: v4().toString(),
+      });
 
       navigation.navigate("newMealInsideOrOutsideDiet", {
         inDiet: mealInfo.insideDiet,
