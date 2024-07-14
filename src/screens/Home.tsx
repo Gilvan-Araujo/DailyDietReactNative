@@ -86,11 +86,9 @@ export const Home = () => {
       )
     );
 
-    console.log(sortedMealsByDate);
-
     const percentage = await getPercentage(meals);
     setStatus({
-      type: percentage > 70 ? "POSITIVE" : "NEGATIVE",
+      type: percentage > 70 || meals.length === 0 ? "POSITIVE" : "NEGATIVE",
       percentage: percentage.toFixed(2),
     });
 
@@ -99,6 +97,7 @@ export const Home = () => {
 
   useFocusEffect(
     useCallback(() => {
+      // clearStorage();
       getMealsFromStorage();
     }, [])
   );

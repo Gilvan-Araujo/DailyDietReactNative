@@ -6,6 +6,7 @@ export declare global {
       newMeal: undefined;
       newMealInsideOrOutsideDiet: { inDiet: boolean };
       meal: { mealId: string };
+      editMeal: { mealId: string };
     }
   }
 }

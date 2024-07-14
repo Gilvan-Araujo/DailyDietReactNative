@@ -9,10 +9,16 @@ import { useCallback, useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styled, { useTheme } from "styled-components/native";
 import { MealInfo } from "./NewMeal";
-import { ArrowLeft, Circle } from "phosphor-react-native";
+import {
+  ArrowLeft,
+  Circle,
+  PencilSimpleLine,
+  Trash,
+} from "phosphor-react-native";
 import { format } from "date-fns";
-import { Alert, View } from "react-native";
+import { Alert, Modal, View } from "react-native";
 import { Button } from "@components/Button";
+import { deleteMeal } from "@storage/meals/deleteMeal";
 
 type RouteParams = ReactNavigation.RootParamList["meal"];
 
@@ -36,6 +42,7 @@ export const Meal = () => {
     time: "",
     insideDiet: undefined,
   });
+  const [modalVisible, setModalVisible] = useState(false);
 
   const handleGoHome = () => navigation.navigate("home");
 
@@ -53,6 +60,26 @@ export const Meal = () => {
         },
       ]);
     }
+  };
+
+  const handleDeleteMeal = async () => {
+    Alert.alert("Atenção", "Deseja realmente excluir essa refeição?", [
+      {
+        text: "Cancelar",
+        style: "cancel",
+      },
+      {
+        text: "Excluir",
+        onPress: async () => {
+          await deleteMeal(mealId);
+          navigation.navigate("home");
+        },
+      },
+    ]);
+  };
+
+  const handleNavigateEditMeal = () => {
+    navigation.navigate("editMeal", { mealId });
   };
 
   useFocusEffect(
@@ -107,8 +134,17 @@ export const Meal = () => {
         </View>
 
         <ButtonsContainer>
-          <Button label="Editar refeição" />
-          <Button label="Excluir refeição" variant="SECONDARY" />
+          <Button
+            label="Editar refeição"
+            Icon={PencilSimpleLine}
+            onPress={handleNavigateEditMeal}
+          />
+          <Button
+            label="Excluir refeição"
+            variant="SECONDARY"
+            Icon={Trash}
+            onPress={handleDeleteMeal}
+          />
         </ButtonsContainer>
       </Content>
     </Container>

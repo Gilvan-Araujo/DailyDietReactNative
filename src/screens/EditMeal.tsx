@@ -7,9 +7,15 @@ import { Alert, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import styled from "styled-components/native";
 import { useCallback, useState } from "react";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
-import { createMeal } from "@storage/meals/createMeal";
-import uuid from "react-native-uuid";
+import {
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from "@react-navigation/native";
+import { getMealById } from "@storage/meals/getMealById";
+import { updateMeal } from "@storage/meals/updateMeal";
+import { Loading } from "@components/Loading";
+import { format } from "date-fns";
 
 export type MealInfo = {
   id: string;
@@ -53,15 +59,21 @@ const emptyMealInfo: MealInfo = {
   insideDiet: undefined,
 };
 
-export const NewMeal = () => {
+type RouteParams = ReactNavigation.RootParamList["meal"];
+
+export const EditMeal = () => {
   const navigation = useNavigation();
-  const { v4 } = uuid;
+  const route = useRoute();
+
+  const { mealId } = route.params as RouteParams;
 
   const [mealInfo, setMealInfo] = useState<MealInfo>(emptyMealInfo);
 
   const handleGoHome = () => navigation.navigate("home");
 
-  const handleLogMeal = async () => {
+  const handleEditMeal = async () => {
+    if (!mealInfo) return;
+
     let error = false;
     let errorMessage = "Os seguintes campos não foram preenchidos: ";
 
@@ -94,51 +106,35 @@ export const NewMeal = () => {
     if (!validateDate(mealInfo.date))
       return Alert.alert("Data inválida", "A data está inválida");
 
-    if (mealInfo.insideDiet !== undefined) {
-      const [day, month, year] = mealInfo.date.split("/");
-      const date = `${year}-${month}-${day}`;
+    const newDate = mealInfo.date.split("/").reverse().join("-");
 
-      await createMeal({
-        ...mealInfo,
-        date: date,
-        id: v4().toString(),
-      });
+    await updateMeal({
+      ...mealInfo,
+      date: newDate,
+    });
 
-      navigation.navigate("newMealInsideOrOutsideDiet", {
-        inDiet: mealInfo.insideDiet,
+    navigation.navigate("home");
+  };
+
+  const getMeal = async () => {
+    const meal = await getMealById(mealId);
+
+    if (meal) console.log(format(new Date(meal.date), "dd/MM/yyyy"));
+
+    if (meal)
+      setMealInfo({
+        ...meal,
+        date: format(new Date(meal.date), "dd/MM/yyyy"),
       });
-    }
   };
 
   useFocusEffect(
     useCallback(() => {
-      setMealInfo(emptyMealInfo);
-
-      Alert.alert("Refeição agora?", "Você está comendo agora?", [
-        {
-          text: "Sim",
-          onPress: () => {
-            const now = new Date();
-            const day = now.getDate().toString().padStart(2, "0");
-            const month = (now.getMonth() + 1).toString().padStart(2, "0");
-            const year = now.getFullYear().toString();
-            const hour = now.getHours().toString().padStart(2, "0");
-            const minute = now.getMinutes().toString().padStart(2, "0");
-
-            setMealInfo((prevState) => ({
-              ...prevState,
-              date: `${day}/${month}/${year}`,
-              time: `${hour}:${minute}`,
-            }));
-          },
-        },
-        {
-          text: "Não",
-          onPress: () => {},
-        },
-      ]);
+      getMeal();
     }, [])
   );
+
+  if (!mealInfo) return <Loading />;
 
   return (
     <Container>
@@ -150,14 +146,16 @@ export const NewMeal = () => {
           Nova refeição
         </MyAppText>
       </Header>
+
       <Content>
         <Input
           value={mealInfo.name}
           onChangeText={(text) => {
-            setMealInfo((prevState) => ({
-              ...prevState,
-              name: text,
-            }));
+            if (mealInfo)
+              setMealInfo((prevState) => ({
+                ...prevState,
+                name: text,
+              }));
           }}
           label="Nome"
           keyboardType="default"
@@ -245,7 +243,7 @@ export const NewMeal = () => {
           />
         </InsideDietContainer>
 
-        <Button label="Cadastrar refeição" onPress={handleLogMeal} />
+        <Button label="Atualizar refeição" onPress={handleEditMeal} />
       </Content>
     </Container>
   );
